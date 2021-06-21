@@ -1,0 +1,24 @@
+{
+	"name": "trimid",
+	"version": "1.0.0",
+	"description": "A small unique id generator that is inspired by mongodb ObjectId with some modifications",
+	"main": "trimid.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/JCloudYu/trimid.git"
+	},
+	"keywords": [
+		"UniqueId",
+		"TrimId",
+		"ShortId"
+	],
+	"author": "JCloudYu",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/JCloudYu/trimid/issues"
+	},
+	"homepage": "https://github.com/JCloudYu/trimid#readme"
+}
