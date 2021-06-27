@@ -1,10 +1,10 @@
 {
 	"name": "trimid",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "A small unique id generator that is inspired by mongodb ObjectId with some modifications",
 	"main": "trimid.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "node ./test.js"
 	},
 	"repository": {
 		"type": "git",
