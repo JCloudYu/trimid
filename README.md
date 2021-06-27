@@ -71,8 +71,3 @@ newId.machine_id	// 4-bytes unsigned integer, the machine's idenfier ( resolved 
 newId.pid			// 2-bytes unsigned integer, the process current js engine is working on
 newId.seq			// 3-bytes unsigned integer, the sequential number that prevents unexpected collisions
 ```
-
-
-
-### Notice ###
-This library uses 32bit unsigned integer timestamp
