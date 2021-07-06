@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  *	Author: JCloudYu
  *	Create: 2020/06/28
@@ -560,6 +561,61 @@
 	
 	
 	// Export interface
+	if ( require.main === module ) {
+		const args = process.argv.slice(2).reverse();
+		const options = {};
+		while(args.length > 0) {
+			const arg = args.pop();
+			switch(arg) {
+				case "--help":
+					options.help = true;
+					break;
+				
+				case "--binary":
+					options.binary = true;
+					break;
+
+				case "--b64sort":
+					options.base64sort = true;
+					break;
+
+				case "--b32hex":
+					options.base32hex = true;
+					break;
+
+				case "--hex":
+					options.hex = true;
+					break;
+			}
+		}
+
+
+		if ( options.help ) {
+			console.log(`trimid [--b64sort] [--binary] [--hex]`);
+			process.exit(1);
+			return;
+		}
+
+		const new_id = TrimId.NEW;
+		if ( options.base64sort ) {
+			process.stdout.write(new_id.toString(64) + "\n");
+		}
+		else
+		if ( options.hex ) {
+			process.stdout.write(new_id.toString(16) + "\n");
+		}
+		else 
+		if ( options.binary ) {
+			process.stdout.write(new_id.bytes);
+		}
+		else {
+			process.stdout.write(new_id.toString(32) + "\n");
+		}
+
+
+		process.exit(0);
+	}
+
 	if ( typeof module !== "undefined" && Object(module) === module ) {
 		module.exports = TrimId;
 		return;
