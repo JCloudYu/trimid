@@ -16,28 +16,43 @@
 	
 	const RUNTIME = {
 		SEQ:Math.floor(Math.random() * 0xFFFFFF),
-		PID:0, MACHINE_ID:null, PREV:Math.floor(Date.now()/1000)
+		SID:null, MACHINE_ID:null, PREV:Math.floor(Date.now()/1000)
 	};
 	
 	if ( IS_NODEJS ) {
+		const Threads = require('worker_threads');
 		RUNTIME.MACHINE_ID = fnv1a32(UTF8Encode(require('os').hostname()));
-		RUNTIME.PID = process.pid;
+
+		const SID_KEY = `${process.pid.toString().padStart(5, '0')}#${process.ppid.toString().padStart(5, '0')}.` + (Threads.isMainThread ? 1 : Threads.threadId).toString().padStart(5, '0');
+		RUNTIME.SID = fnv1a32(UTF8Encode(SID_KEY));
 	}
 	else 
 	{
+		const STR_CANDIDATE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWZYZ_-";
+
+
 		let hostname = '';
 		if ( typeof location === "object" && typeof location.hostname === "string" ) { // Browser
 			hostname = location.hostname;
 		}
-		else { // Randomly generates one
-			const HOSTNAME_CANDIDATES = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWZYZ_-";
-			let count = 30;
+		else { // Randomly generates one	
+			let count = Math.random() * 30 + 30;
 			while(count-- > 0) {
-				hostname += HOSTNAME_CANDIDATES[(Math.random() * HOSTNAME_CANDIDATES.length)|0]
+				hostname += STR_CANDIDATE[(Math.random() * STR_CANDIDATE.length)|0]
 			}
 		}
+
+
+		let sid_key = '';
+		{
+			let count = Math.random() * 30 + 30;
+			while(count-- > 0) {
+				sid_key += STR_CANDIDATE[(Math.random() * STR_CANDIDATE.length)|0]
+			}
+		}
+
 		RUNTIME.MACHINE_ID = fnv1a32(UTF8Encode(hostname));
-		RUNTIME.PID = (Math.random() * 65535)|0;
+		RUNTIME.SID = fnv1a32(UTF8Encode(sid_key));
 	}
 	
 	
@@ -88,41 +103,44 @@
 
 
 				// Build up TrimId
-				const buff	= new Uint8Array(14);
+				const buff	= new Uint8Array(16);
 				
 				// 5-byte long timestamp
-				buff[0]  = time_upper & 0xFF;
-				buff[1]  = (time_lower>>>24) & 0xFF;
-				buff[2]  = (time_lower>>>16) & 0xFF;
-				buff[3]  = (time_lower>>>8) & 0xFF;
-				buff[4]  = time_lower & 0xFF;
+				buff[ 0]  = time_upper & 0xFF;
+				buff[ 1]  = (time_lower>>>24) & 0xFF;
+				buff[ 2]  = (time_lower>>>16) & 0xFF;
+				buff[ 3]  = (time_lower>>>8) & 0xFF;
+				buff[ 4]  = time_lower & 0xFF;
 				
 				// 4-byte long machine id
-				buff[5]  = RUNTIME.MACHINE_ID[0];
-				buff[6]  = RUNTIME.MACHINE_ID[1];
-				buff[7]  = RUNTIME.MACHINE_ID[2];
-				buff[8]  = RUNTIME.MACHINE_ID[3];
+				buff[ 5]  = RUNTIME.MACHINE_ID[0];
+				buff[ 6]  = RUNTIME.MACHINE_ID[1];
+				buff[ 7]  = RUNTIME.MACHINE_ID[2];
+				buff[ 8]  = RUNTIME.MACHINE_ID[3];
 
-				// 2-byte long pid
-				buff[9]	 = (RUNTIME.PID >> 8) & 0xFF;
-				buff[10] = RUNTIME.PID & 0xFF;
+				// 4-byte long session id
+				buff[ 9]  = RUNTIME.SID[0];
+				buff[10]  = RUNTIME.SID[1];
+				buff[11]  = RUNTIME.SID[2];
+				buff[12]  = RUNTIME.SID[3];
 
 				// 3-byte long sequence number
-				buff[11] = (inc>>>16) & 0xFF;
-				buff[12] = (inc>>>8) & 0xFF;
-				buff[13] = inc & 0xFF;
+				buff[13] = (inc>>>16) & 0xFF;
+				buff[14] = (inc>>>8) & 0xFF;
+				buff[15] = inc & 0xFF;
+				
 				
 				
 				
 				result_buffer = buff;
 			}
 			else {
-				if ( input_buffer.length < 14 ) {
+				if ( input_buffer.length < 16 ) {
 					throw new TypeError( "Given input buffer must be at least 14 bytes long!" );
 				}
 				
 				// Prevent unexpected pre-allocated bytes from NodeJS Buffer
-				result_buffer = new Uint8Array(input_buffer.slice(0, 14));
+				result_buffer = new Uint8Array(input_buffer.slice(0, 16));
 			}
 			
 			
@@ -170,13 +188,13 @@
 			const bytes = PRIVATE.get(this).buffer;
 			return (((bytes[5] << 24)|(bytes[6] << 16)|(bytes[7] << 8)|bytes[8]) >>> 0);
 		}
-		get pid() {
+		get session_id() {
 			const bytes = PRIVATE.get(this).buffer;
-			return (((bytes[9] << 8)|bytes[10]) >>> 0);
+			return (((bytes[9] << 24)|(bytes[10] << 16)|(bytes[11] << 8)|bytes[12]) >>> 0);
 		}
 		get seq() {
 			const bytes = PRIVATE.get(this).buffer;
-			return (((bytes[11] << 16)|(bytes[12] << 8)|bytes[13]) >>> 0);
+			return (((bytes[13] << 16)|(bytes[14] << 8)|bytes[15]) >>> 0);
 		}
 		
 		
@@ -472,23 +490,31 @@
 			const v5 = BASE32_DECODE_CHAR[input[begin+4]];
 			const v6 = BASE32_DECODE_CHAR[input[begin+5]];
 			const v7 = BASE32_DECODE_CHAR[input[begin+6]];
-			if ( v1 === undefined || v2 === undefined || v3 === undefined || v4 === undefined || v5 === undefined || v6 === undefined || v7 === undefined ) {
-				throw new RangeError("Given input string is not base32hex encoded!");
-			}
-
 			if ( remain >= 2 ) {
+				if ( v1 === undefined || v2 === undefined ) {
+					throw new RangeError("Given input string is not base32hex encoded!");
+				}
 				decoded[dest] =  v1 << 3 | v2 >> 2;						// 0
 			}
 			
 			if ( remain >= 4 ) {
+				if ( v3 === undefined || v4 === undefined ) {
+					throw new RangeError("Given input string is not base32hex encoded!");
+				}
 				decoded[dest+1] = (v2 & 0x03) << 6 | v3 << 1 | v4 >> 4;	// 1
 			}
 			
 			if ( remain >= 5 ) {
+				if ( v5 === undefined ) {
+					throw new RangeError("Given input string is not base32hex encoded!");
+				}
 				decoded[dest+2] = (v4 & 0x0F) << 4 | v5 >> 1;			// 2
 			}
 			
 			if ( remain === 7 ) {
+				if ( v6 === undefined || v7 === undefined ) {
+					throw new RangeError("Given input string is not base32hex encoded!");
+				}
 				decoded[dest+3] = (v5 & 0x01) << 7 | v6 << 2 | v7 >> 3;	// 3
 			}
 		}

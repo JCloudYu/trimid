@@ -2,7 +2,6 @@
 	"use strict";
 
 	const TrimId = require('./trimid.js');
-	const pid = process.pid;
 	
 	for(let count = 0; count < 10000; count++) {
 		const now = Math.floor(Date.now()/1000);
@@ -12,7 +11,6 @@
 		const hex			= TrimId.fromHex(ground_truth.toString(16));
 		const b32			= TrimId.fromBase32Hex(ground_truth.toString(32));
 		const b64			= TrimId.fromBase64Sort(ground_truth.toString(64));
-
 
 		if ( ground_truth.timestamp !== now || new_one.timestamp !== ground_truth.timestamp ) {
 			console.error("TrimId::timestamp mismatched!");
@@ -26,12 +24,12 @@
 			return;
 		}
 
-		if ( ground_truth.pid !== pid || ground_truth.pid !== new_one.pid ) {
+		if ( ground_truth.pid !== new_one.pid ) {
 			console.error("TrimId::pid mismatched!");
 			process.exit(1);
 			return;
 		}
-
+		
 		if ( ground_truth.seq !== (new_one.seq-1) ) {
 			console.error("TrimId::seq mismatched!");
 			process.exit(1);
