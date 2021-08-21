@@ -1,8 +1,8 @@
 {
 	"name": "trimid",
-	"version": "3.1.0",
+	"version": "3.1.1",
 	"description": "A small unique id generator that is inspired by mongodb ObjectId with some modifications",
-	"main": "trimid.js",
+	"main": "exported.js",
 	"bin": {
 		"uniqid": "trimid.js"
 	},
