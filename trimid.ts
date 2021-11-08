@@ -151,7 +151,7 @@
 			
 			PRIVATE.set(this, _UniqueId);
 		}
-		toString(format=64) {
+		toString(format:16|32|64=32) {
 			const buffer = PRIVATE.get(this).buffer;
 			
 			switch(format) {
@@ -165,7 +165,7 @@
 					return HexEncode(buffer);
 				
 				default:
-					throw new SyntaxError(`Cannot cast unique-id as \`${format}\``);
+					throw new SyntaxError(`Cannot cast unique-id into \`${format}\``);
 			}
 			
 		}

@@ -1,4 +1,3 @@
-"use strict";
 (function () {
     "use strict";
     // #endergion
@@ -109,7 +108,7 @@
             PRIVATE.set(this, _UniqueId);
         }
         TrimId.prototype.toString = function (format) {
-            if (format === void 0) { format = 64; }
+            if (format === void 0) { format = 32; }
             var buffer = PRIVATE.get(this).buffer;
             switch (format) {
                 case 64:
@@ -119,7 +118,7 @@
                 case 16:
                     return HexEncode(buffer);
                 default:
-                    throw new SyntaxError("Cannot cast unique-id as `" + format + "`");
+                    throw new SyntaxError("Cannot cast unique-id into `" + format + "`");
             }
         };
         TrimId.prototype.toJSON = function () {
