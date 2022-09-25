@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+"use strict";
 (function () {
     "use strict";
     // #endergion
@@ -13,7 +15,7 @@
     if (IS_NODEJS) {
         var Threads = require('worker_threads');
         RUNTIME.MACHINE_ID = fnv1a32(UTF8Encode(require('os').hostname()));
-        var SID_KEY = process.pid.toString().padStart(5, '0') + "#" + process.ppid.toString().padStart(5, '0') + "." + (Threads.isMainThread ? 1 : Threads.threadId).toString().padStart(5, '0');
+        var SID_KEY = "".concat(process.pid.toString().padStart(5, '0'), "#").concat(process.ppid.toString().padStart(5, '0'), ".") + (Threads.isMainThread ? 1 : Threads.threadId).toString().padStart(5, '0');
         RUNTIME.SID = fnv1a32(UTF8Encode(SID_KEY));
     }
     else {
@@ -118,7 +120,7 @@
                 case 16:
                     return HexEncode(buffer);
                 default:
-                    throw new SyntaxError("Cannot cast unique-id into `" + format + "`");
+                    throw new SyntaxError("Cannot cast unique-id into `".concat(format, "`"));
             }
         };
         TrimId.prototype.toJSON = function () {
@@ -470,7 +472,7 @@
         while (i < str.length) {
             var codePoint = str.codePointAt(i);
             if (codePoint === undefined) {
-                throw new Error("Invalid codepoint at index#" + i + "!");
+                throw new Error("Invalid codepoint at index#".concat(i, "!"));
             }
             // 1-byte sequence
             if ((codePoint & 0xffffff80) === 0) {

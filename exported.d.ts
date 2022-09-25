@@ -1,7 +1,8 @@
 type TypedArray = Uint8Array | Uint8ClampedArray | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array;
 declare class TrimId {
     constructor(id?: TrimId | ArrayBuffer | TypedArray);
-    toString(format?:16|32|64): string;
+	toString(format?:32):string;
+    toString(format:16|64): string;
     toJSON(): string;
     toBytes(): any;
     get bytes(): any;
