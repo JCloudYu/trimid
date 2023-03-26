@@ -109,25 +109,16 @@
             _UniqueId.buffer = result_buffer;
             PRIVATE.set(this, _UniqueId);
         }
-        TrimId.prototype.toString = function (format) {
-            if (format === void 0) { format = 32; }
-            var buffer = PRIVATE.get(this).buffer;
-            switch (format) {
-                case 64:
-                    return Base64SortEncode(buffer);
-                case 32:
-                    return Base32HexEncode(buffer);
-                case 16:
-                    return HexEncode(buffer);
-                default:
-                    throw new SyntaxError("Cannot cast unique-id into `".concat(format, "`"));
+        TrimId._base = function (machine_id, session_id) {
+            if (typeof machine_id === "string") {
+                RUNTIME.MACHINE_ID = fnv1a32(UTF8Encode(machine_id));
+            }
+            if (typeof session_id === "string") {
+                RUNTIME.SID = fnv1a32(UTF8Encode(session_id));
             }
         };
-        TrimId.prototype.toJSON = function () {
-            return this.toString();
-        };
-        TrimId.prototype.toBytes = function () {
-            return PRIVATE.get(this).buffer.slice(0);
+        TrimId.prototype.toString = function () {
+            return Base32HexEncode(PRIVATE.get(this).buffer);
         };
         Object.defineProperty(TrimId.prototype, "bytes", {
             get: function () {
@@ -179,34 +170,10 @@
         });
         TrimId.from = function (input) {
             try {
+                if (typeof input === "string") {
+                    input = Base32HexDecode(input);
+                }
                 return new TrimId(input);
-            }
-            catch (e) {
-                return null;
-            }
-        };
-        TrimId.fromHex = function (input) {
-            try {
-                var buffer = HexDecode(input);
-                return new TrimId(buffer);
-            }
-            catch (e) {
-                return null;
-            }
-        };
-        TrimId.fromBase64Sort = function (input) {
-            try {
-                var buffer = Base64SortDecode(input);
-                return new TrimId(buffer);
-            }
-            catch (e) {
-                return null;
-            }
-        };
-        TrimId.fromBase32Hex = function (input) {
-            try {
-                var buffer = Base32HexDecode(input);
-                return new TrimId(buffer);
             }
             catch (e) {
                 return null;
@@ -214,126 +181,6 @@
         };
         return TrimId;
     }());
-    // HEX
-    var HEX_ENCODE_CHAR = "0123456789abcdef";
-    var HEX_DECODE_CHAR = {
-        "0": 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
-        "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15,
-        "a": 10, "b": 11, "c": 12, "d": 13, "e": 14, "f": 15
-    };
-    function HexEncode(bytes) {
-        var result = '';
-        for (var i = 0; i < bytes.length; i++) {
-            var value = bytes[i];
-            result += HEX_ENCODE_CHAR[(value & 0xF0) >>> 4] + HEX_ENCODE_CHAR[value & 0x0F];
-        }
-        return result;
-    }
-    function HexDecode(hex_string) {
-        if (hex_string.length % 2 === 1) {
-            hex_string = '0' + hex_string;
-        }
-        var buff = new Uint8Array((hex_string.length / 2) | 0);
-        for (var i = 0; i < buff.length; i++) {
-            var offset = i * 2, upper = HEX_DECODE_CHAR[hex_string[offset]], lower = HEX_DECODE_CHAR[hex_string[offset + 1]];
-            if (upper === undefined || lower === undefined) {
-                throw new RangeError("Given input string is not hex encoded!");
-            }
-            buff[i] = upper << 4 | (lower & 0x0F);
-        }
-        return buff;
-    }
-    // Base64Sort
-    var BASE64SORT_ENCODE_CHAR = '0123456789=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz'.split('');
-    var BASE64SORT_DECODE_CHAR = {
-        '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-        '8': 8, '9': 9, '=': 10, 'A': 11, 'B': 12, 'C': 13, 'D': 14, 'E': 15,
-        'F': 16, 'G': 17, 'H': 18, 'I': 19, 'J': 20, 'K': 21, 'L': 22, 'M': 23,
-        'N': 24, 'O': 25, 'P': 26, 'Q': 27, 'R': 28, 'S': 29, 'T': 30, 'U': 31,
-        'V': 32, 'W': 33, 'X': 34, 'Y': 35, 'Z': 36, '_': 37, 'a': 38, 'b': 39,
-        'c': 40, 'd': 41, 'e': 42, 'f': 43, 'g': 44, 'h': 45, 'i': 46, 'j': 47,
-        'k': 48, 'l': 49, 'm': 50, 'n': 51, 'o': 52, 'p': 53, 'q': 54, 'r': 55,
-        's': 56, 't': 57, 'u': 58, 'v': 59, 'w': 60, 'x': 61, 'y': 62, 'z': 63,
-    };
-    function Base64SortEncode(bytes) {
-        var v1, v2, v3, base64Str = '', length = bytes.length;
-        for (var i = 0, count = ((length / 3) >>> 0) * 3; i < count;) {
-            v1 = bytes[i++];
-            v2 = bytes[i++];
-            v3 = bytes[i++];
-            base64Str += BASE64SORT_ENCODE_CHAR[v1 >>> 2] +
-                BASE64SORT_ENCODE_CHAR[(v1 << 4 | v2 >>> 4) & 63] +
-                BASE64SORT_ENCODE_CHAR[(v2 << 2 | v3 >>> 6) & 63] +
-                BASE64SORT_ENCODE_CHAR[v3 & 63];
-        }
-        // remain char
-        var remain = length - count;
-        if (remain === 1) {
-            v1 = bytes[i];
-            base64Str += BASE64SORT_ENCODE_CHAR[v1 >>> 2] + BASE64SORT_ENCODE_CHAR[(v1 << 4) & 63] + '';
-        }
-        else if (remain === 2) {
-            v1 = bytes[i++];
-            v2 = bytes[i];
-            base64Str += BASE64SORT_ENCODE_CHAR[v1 >>> 2] + BASE64SORT_ENCODE_CHAR[(v1 << 4 | v2 >>> 4) & 63] + BASE64SORT_ENCODE_CHAR[(v2 << 2) & 63] + '';
-        }
-        return base64Str;
-    }
-    function Base64SortDecode(base64Str) {
-        var _tmp;
-        base64Str = '' + base64Str;
-        var length = base64Str.length;
-        var remain = length % 4;
-        switch (remain) {
-            case 0:
-                _tmp = (length / 4 | 0) * 3;
-                break;
-            case 2:
-                _tmp = (length / 4 | 0) * 3 + 1;
-                break;
-            case 3:
-                _tmp = (length / 4 | 0) * 3 + 2;
-                break;
-            default:
-                throw new Error("Given input string is not base64sort encoded!");
-        }
-        var bytes = new Uint8Array(_tmp);
-        var v1, v2, v3, v4, i = 0, j = 0, end = (length / 4 | 0) * 4;
-        while (i < end) {
-            v1 = BASE64SORT_DECODE_CHAR[base64Str[i++]];
-            v2 = BASE64SORT_DECODE_CHAR[base64Str[i++]];
-            v3 = BASE64SORT_DECODE_CHAR[base64Str[i++]];
-            v4 = BASE64SORT_DECODE_CHAR[base64Str[i++]];
-            if (v1 === undefined || v2 === undefined || v3 === undefined || v4 === undefined) {
-                throw new Error("Given input string is not base64sort encoded!");
-            }
-            bytes[j++] = (v1 << 2 | v2 >>> 4);
-            bytes[j++] = (v2 << 4 | v3 >>> 2);
-            bytes[j++] = (v3 << 6 | v4);
-        }
-        // Decode remaining bytes
-        switch (remain) {
-            case 2:
-                v1 = BASE64SORT_DECODE_CHAR[base64Str.charAt(i++)];
-                v2 = BASE64SORT_DECODE_CHAR[base64Str.charAt(i)];
-                if (v1 === undefined || v2 === undefined) {
-                    throw new Error("Given input string is not base64sort encoded!");
-                }
-                bytes[j] = (v1 << 2 | v2 >>> 4);
-                break;
-            case 3:
-                v1 = BASE64SORT_DECODE_CHAR[base64Str.charAt(i++)];
-                v2 = BASE64SORT_DECODE_CHAR[base64Str.charAt(i++)];
-                v3 = BASE64SORT_DECODE_CHAR[base64Str.charAt(i)];
-                if (v1 === undefined || v2 === undefined || v3 === undefined) {
-                    throw new Error("Given input string is not base64sort encoded!");
-                }
-                bytes[j] = (v1 << 2 | v2 >>> 4);
-                bytes[j + 1] = (v2 << 4 | v3 >>> 2);
-                break;
-        }
-        return bytes;
-    }
     // Base32
     var BASE32_ENCODE_CHAR = "0123456789abcdefghijklmnopqrstuv".split('');
     var BASE32_DECODE_CHAR = {
@@ -509,10 +356,7 @@
     // If the module 
     if (typeof require !== "undefined" && require.main === module) {
         var args = process.argv.slice(2).reverse();
-        var options = {
-            help: false, binary: false, base64sort: false,
-            base32hex: false, hex: false
-        };
+        var options = { help: false, binary: false };
         while (args.length > 0) {
             var arg = args.pop();
             switch (arg) {
@@ -522,34 +366,19 @@
                 case "--binary":
                     options.binary = true;
                     break;
-                case "--b64sort":
-                    options.base64sort = true;
-                    break;
-                case "--b32hex":
-                    options.base32hex = true;
-                    break;
-                case "--hex":
-                    options.hex = true;
-                    break;
             }
         }
         if (options.help) {
-            console.log("trimid [--b64sort] [--binary] [--hex]");
+            console.log("trimid [--binary]");
             process.exit(1);
             return;
         }
         var new_id = TrimId.NEW;
-        if (options.base64sort) {
-            process.stdout.write(new_id.toString(64) + "\n");
-        }
-        else if (options.hex) {
-            process.stdout.write(new_id.toString(16) + "\n");
-        }
-        else if (options.binary) {
+        if (options.binary) {
             process.stdout.write(new_id.bytes);
         }
         else {
-            process.stdout.write(new_id.toString(32) + "\n");
+            process.stdout.write(new_id.toString() + "\n");
         }
         process.exit(0);
         return;
