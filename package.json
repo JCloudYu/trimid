@@ -1,13 +1,14 @@
 {
 	"name": "trimid",
-	"version": "4.1.0",
+	"version": "5.0.0",
 	"description": "A small unique id generator that is inspired by mongodb ObjectId with some modifications",
 	"main": "exported.js",
 	"bin": {
 		"uniqid": "trimid.js"
 	},
 	"scripts": {
-		"test": "node ./test.js"
+		"test": "node ./test.js",
+		"build": "tsc && terser -m -- ./trimid.js > trimid.min.js"
 	},
 	"repository": {
 		"type": "git",
@@ -25,6 +26,6 @@
 	},
 	"homepage": "https://github.com/JCloudYu/trimid#readme",
 	"devDependencies": {
-		"@types/node": "^16.7.1"
+		"@types/node": "^22.10.2"
 	}
 }

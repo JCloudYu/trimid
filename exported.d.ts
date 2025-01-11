@@ -1,19 +1,14 @@
-type TypedArray = Uint8Array | Uint8ClampedArray | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array;
 declare class TrimId {
-    constructor(id?: TrimId | ArrayBuffer | TypedArray);
-	toString(format?:32):string;
-    toString(format:16|64): string;
-    toJSON(): string;
-    toBytes(): any;
-    get bytes(): any;
-    get timestamp(): number;
-    get machine_id(): number;
-    get session_id(): number;
-    get seq(): number;
-    static get NEW(): TrimId;
-    static from(input?: TrimId | ArrayBuffer | TypedArray): TrimId | null;
-    static fromHex(input: string): TrimId | null;
-    static fromBase64Sort(input: string): TrimId | null;
-    static fromBase32Hex(input: string): TrimId | null;
+    static setup(machine_id: string, session_id: string): void;
+    static longid(base:32|62=62): string;
+    static shortid(base:32|62=62): string;
+    static read(id: string, base:32|62=62): {
+        timestamp: number;
+        machine_id?: number;
+        session_id?: number;
+        identity?: number;
+        seq: number;
+    };
 }
+
 export = TrimId;

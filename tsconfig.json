@@ -1,9 +1,8 @@
 {
 	"compilerOptions": {
-		"target":"ES5",
+		"target":"es2022",
 		"module":"none",
-		"allowJs": false,
-		"checkJs": false,
-		"strict": true
+		"strict": true,
+		"skipLibCheck": true
 	}
 }
