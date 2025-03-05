@@ -1,6 +1,6 @@
 {
 	"name": "trimid",
-	"version": "5.0.0",
+	"version": "5.0.1",
 	"description": "A small unique id generator that is inspired by mongodb ObjectId with some modifications",
 	"main": "exported.js",
 	"bin": {

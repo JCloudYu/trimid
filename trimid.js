@@ -58,7 +58,6 @@
                 RUNTIME.SEQ = 0;
                 RUNTIME.TID = time;
             }
-            console.log(RUNTIME.SEQ);
             const inc = RUNTIME.SEQ = (RUNTIME.SEQ + 1) & 0xFFFFFF;
             // Build up TrimId
             const buff = new Uint8Array(16);
@@ -97,7 +96,6 @@
                 RUNTIME.SEQ = 0;
                 RUNTIME.TID = time;
             }
-            console.log(RUNTIME.TID, RUNTIME.SEQ.toString(16).padStart(2, '0'));
             const inc = RUNTIME.SEQ = (RUNTIME.SEQ + 1) & 0xFFFF;
             // Build up TrimId
             const buff = new Uint8Array(11);

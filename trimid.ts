@@ -75,7 +75,6 @@
 				RUNTIME.SEQ = 0;
 				RUNTIME.TID = time;
 			}
-			console.log(RUNTIME.SEQ);
 			const inc = RUNTIME.SEQ = (RUNTIME.SEQ + 1) & 0xFFFFFF;
 
 
@@ -126,7 +125,6 @@
 				RUNTIME.SEQ = 0;
 				RUNTIME.TID = time;
 			}
-			console.log(RUNTIME.TID, RUNTIME.SEQ.toString(16).padStart(2, '0'));
 			const inc = RUNTIME.SEQ = (RUNTIME.SEQ + 1) & 0xFFFF;
 
 
